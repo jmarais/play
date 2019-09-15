@@ -1,10 +1,10 @@
 function getUrlParameter(sParam) {
     var sPageURL = window.location.search.substring(1);
     var sURLVariables = sPageURL.split('&');
-    for (var i = 0; i < sURLVariables.length; i++) 
+    for (var i = 0; i < sURLVariables.length; i++)
     {
         var sParameterName = sURLVariables[i].split('=');
-        if (sParameterName[0] == sParam) 
+        if (sParameterName[0] == sParam)
         {
             return sParameterName[1];
         }
@@ -22,18 +22,35 @@ function validateCode(mode, codeMirrors) {
 		res = res.replace("Error: ", "");
 		$('#theoutput').prop("class", "alert alert-danger");
 		$('#theoutput').text(res);
+		removeASTSVG(document.querySelector('#astoutput'));
 	} else {
 		if (res == "true") {
 			$('#theoutput').prop("class", "alert alert-success");
 			$('#theoutput').text("The input on the right satisfies the validation expression on the left.");
+			drawAST(mode, codeMirrors);
 		} else if (res == "false") {
 			$('#theoutput').prop("class", "alert alert-warning");
 			$('#theoutput').text("The input on the right does not satisfy the validation expression on the left.");
+			drawAST(mode, codeMirrors);
 		} else {
 			$('#theoutput').prop("class", "alert alert-danger");
 			$('#theoutput').text(res);
+			removeASTSVG(document.querySelector('#astoutput'));
 		}
 	}
+}
+
+function drawAST(mode, codeMirrors) {
+  var katydidcode  = codeMirrors['katydid'].getValue();
+  var validateFunc = gofunctions['RelapseASTDraw'];
+  var res          = validateFunc(katydidcode, false);
+  if (res.indexOf('Error: ') === 0) {
+    res = res.replace('Error: ', '');
+    $('#astoutput').prop('class', 'alert alert-danger');
+    $('#astoutput').text(res);
+  } else {
+    updateGraph(res)
+  }
 }
 
 function reportError(err) {
@@ -169,11 +186,11 @@ function init() {
 	    }
 	}
 
-	$("#saveButton").click(function(ev) { 
+	$("#saveButton").click(function(ev) {
 		saveCode(mode, codeMirrors);
 	});
 
-	$("#validateButton").click(function(ev) { 
+	$("#validateButton").click(function(ev) {
 		ev.preventDefault();
 		validateCode(mode, codeMirrors);
 	});
@@ -194,7 +211,59 @@ function init() {
 	for (var key in codeMirrors) {
 		codeMirrors[key].on('keyup', function(instance, event) {
     		validateCode(mode, codeMirrors);
-		});		
+		});
 	}
+	drawAST(mode, codeMirrors);
+	validateCode(mode, codeMirrors);
 
+}
+
+function hash(x) {
+	s = x.toSource()
+	var hash = 0, i, chr;
+	if (s.length === 0) return hash;
+	for (i = 0; i < s.length; i++) {
+		chr  = s.charCodeAt(i);
+		hash = ((hash << 5) - hash) + chr;
+		hash |= 0;  // Convert to 32bit integer
+	}
+	return hash;
+}
+var parser = new DOMParser();
+
+function removeASTSVG(graph) {
+	var svg = graph.querySelector('svg');
+	if (svg) {
+		graph.removeChild(svg);
+	}
+}
+
+function updateGraph(src) {
+	var result  = Viz(src, {
+		engine: 'dot',
+		format: 'svg',
+	})
+	var graph   = document.querySelector('#astoutput');
+	removeASTSVG(graph);
+
+	var svg = parser.parseFromString(result, 'image/svg+xml').documentElement;
+	svg.id  = 'svg_output';
+	svg.style = 'overflow: hidden; display: inline; width: 100%; height: 100%; ';
+	svg.viewBox = '0 0 900 900';
+
+	graph.appendChild(svg);
+
+	panZoom = svgPanZoom(svg, {
+		zoomEnabled: true,
+		controlIconsEnabled: true,
+		fit: true,
+		center: true,
+	});
+
+	svg.addEventListener('paneresize', function(e) {
+		panZoom.resize();
+	}, false);
+	window.addEventListener('resize', function(e) {
+		panZoom.resize();
+	});
 }

@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gopherjs/gopherjs/js"
+	"github.com/jmarais/katydidviz/relapse/encode/graphviz"
 	"github.com/katydid/katydid/parser"
 	"github.com/katydid/katydid/parser/json"
 	"github.com/katydid/katydid/parser/xml"
@@ -31,6 +32,7 @@ import (
 func main() {
 	js.Global.Set("gofunctions", map[string]interface{}{
 		"RelapsePlayground": RelapsePlayground,
+		"RelapseASTDraw":    RelapseASTDraw,
 	})
 }
 
@@ -92,5 +94,29 @@ func relapsePlayground(mode, katydidStr, inputStr string) (match bool, err error
 		return
 	}
 	match, err = m.Validate(p)
+	return
+}
+
+func RelapseASTDraw(katydidStr string, full bool) string {
+	v, err := relapseASTDraw(katydidStr, full)
+	if err != nil {
+		return "Error: " + err.Error()
+	}
+	return v
+}
+
+func relapseASTDraw(katydidStr string, full bool) (res string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
+	var g *ast.Grammar
+	g, err = relapseparser.ParseGrammar(katydidStr)
+	if err != nil {
+		return
+	}
+	graph := graphviz.Translate(g, full)
+	res = graph.String()
 	return
 }
