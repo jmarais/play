@@ -215,7 +215,6 @@ function init() {
 	}
 	drawAST(mode, codeMirrors);
 	validateCode(mode, codeMirrors);
-
 }
 
 function hash(x) {
