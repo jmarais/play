@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gopherjs/gopherjs/js"
-	"github.com/jmarais/katydidviz/relapse/encode/graphviz"
+	"github.com/jmarais/relapseviz"
 	"github.com/katydid/katydid/parser"
 	"github.com/katydid/katydid/parser/json"
 	"github.com/katydid/katydid/parser/xml"
@@ -116,7 +116,7 @@ func relapseASTDraw(katydidStr string, full bool) (res string, err error) {
 	if err != nil {
 		return
 	}
-	graph := graphviz.Translate(g, full)
+	graph := relapseviz.Translate(g, full)
 	res = graph.String()
 	return
 }
