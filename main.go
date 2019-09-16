@@ -116,7 +116,7 @@ func relapseASTDraw(katydidStr string, full bool) (res string, err error) {
 	if err != nil {
 		return
 	}
-	graph := relapseviz.Translate(g, full)
+	graph := relapseviz.TranslateGrammar(g, full)
 	res = graph.String()
 	return
 }
